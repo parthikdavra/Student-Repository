@@ -10,14 +10,16 @@ from collections import defaultdict
 from prettytable import PrettyTable
 from typing import Dict, DefaultDict, Tuple, List, Iterator, Set
 from HW08_Parthik_Davra import file_reader
+import sqlite3
 
 
 class Repository:
     """ Repository class which has Student, Instructor and Majors classes """
 
-    def __init__(self, path: str, tables: bool = True) -> None:
+    def __init__(self, path: str, db_path: str, tables: bool = True) -> None:
         """ initialization of repository data """
         self._path: str = path
+        self._db_path: str = db_path
         self._students: Dict[str, Student] = dict()
         self._instructors: Dict[str, Instructor] = dict()
         self._majors: Dict[str, Major] = dict()
@@ -42,7 +44,7 @@ class Repository:
         """ read students data using file reader function and add data to dictionary """
 
         try:
-            for student_cwid, student_name, student_major in file_reader(path, 3, sep=';', header=True):
+            for student_cwid, student_name, student_major in file_reader(path, 3, sep='\t', header=True):
 
                 if student_major in self._majors:
                     self._students[student_cwid] = Student(
@@ -57,7 +59,7 @@ class Repository:
         """ read instructor data using file reader function and add data to dictionary """
 
         try:
-            for instructor_cwid, instructor_name, instructor_dept in file_reader(path, 3, sep='|', header=True):
+            for instructor_cwid, instructor_name, instructor_dept in file_reader(path, 3, sep='\t', header=True):
                 self._instructors[instructor_cwid] = Instructor(
                     instructor_cwid, instructor_name, instructor_dept)
         except ValueError as error:
@@ -67,7 +69,7 @@ class Repository:
         """ read grades data for student and instructor using file reader function and add data to dictionary """
 
         try:
-            for student_cwid, student_course, student_grade, instructor_cwid in file_reader(path, 4, sep='|', header=True):
+            for student_cwid, student_course, student_grade, instructor_cwid in file_reader(path, 4, sep='\t', header=True):
                 if student_cwid not in self._students:
                     print(f'{student_cwid} are the students grade')
                 else:
@@ -120,6 +122,25 @@ class Repository:
         for major in self._majors.values():
             table.add_row(major.majors_detail())
         print("\nMajors Table")
+        print(table)
+        return table
+
+    def student_grades_table_db(self, db_path: str) -> PrettyTable:
+        """ Grade table for students grade data """
+        table: PrettyTable = PrettyTable(["Name", "CWID", "Course", "Grade", "Instructor"])
+         
+        try:
+            db: sqlite3.Connection = sqlite3.connect(db_path)
+        except FileNotFoundError as error:
+            print(f"There is error with Grade Table data: {error}")
+
+        try:
+            for data_row in db.execute(
+                    "SELECT student.Name, student.CWID, grade.Course,  grade.Grade, instructor.Name FROM students student, grades grade, instructors instructor WHERE student.CWID = StudentCWID AND InstructorCWID = instructor.CWID ORDER BY student.Name"):
+                table.add_row(data_row)
+        except sqlite3.DatabaseError as error:
+            print(f"There is error with Students Grades data: {error}")
+        print("\nStudents Grades Table")
         print(table)
         return table
 
@@ -230,7 +251,7 @@ class Instructor:
 
 def main():
     # Repository location
-    Repository('HW10_Test')
+    Repository("D:\CS-810\HW11", "D:\CS-810\HW11\Homework11.db")
 
 
 if __name__ == '__main__':
