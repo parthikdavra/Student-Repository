@@ -1,0 +1,21 @@
+{% extends 'base.html' %} {% block body %}
+
+<h2>Stevens Repository</h2>
+<h3>Student, Course, Grade and Instructor</h3>
+
+<table border="2">
+  {% for header in headers %}
+  <th>{{ header[0] }}</th>
+  {% endfor %} {% for row in table %}
+  <tr>
+    <td>{{ row.student }}</td>
+    <td>{{ row.cwid }}</td>
+    <td>{{ row.course }}</td>
+    <td>{{ row.grade }}</td>
+    <td>{{ row.instructor }}</td>
+  </tr>
+  {% endfor %}
+</table>
+<br>
+<a href="/" id="click">Click Here to Go Back</a>
+{% endblock %}
